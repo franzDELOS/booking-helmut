@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio bookings</title>
+<style>
+:root{--ink:#1b2140;--ink2:#3b4268;--paper:#e9ecf0;--card:#fff;--line:#cfd5de;--red:#c0392b;--ok:#1f7a4d;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:Georgia,"Iowan Old Style",serif;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:var(--r);padding:.7rem 1.1rem;background:var(--ink);color:#fff;font-weight:600;min-height:44px}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.danger{background:transparent;color:var(--red);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #6b7cff;outline-offset:2px}
+input,select,textarea{width:100%;padding:.65rem .75rem;border:1px solid var(--line);border-radius:var(--r);background:#fff;min-height:44px}
+label{display:block;font-size:.88rem;font-weight:600;margin:0 0 .3rem}
+.wrap{max-width:1000px;margin:0 auto;padding:0 1rem}
+header{background:var(--ink);color:#fff;padding:.8rem 0}
+header .wrap{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+header h1{font-size:1.25rem}
+header button{background:transparent;border:1px solid #ffffff55;min-height:38px;padding:.4rem .9rem}
+.login{max-width:380px;margin:12vh auto;background:var(--card);padding:1.6rem;border-radius:14px;border:1px solid var(--line)}
+.login h1{font-size:1.6rem;margin-bottom:1rem}
+.login .f{margin-bottom:1rem}
+nav{display:flex;gap:.5rem;margin:1rem 0}
+nav button{flex:1;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+nav button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.grid{display:grid;gap:1rem;grid-template-columns:1fr}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.1rem}
+.row{display:grid;gap:.9rem;grid-template-columns:1fr}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}
+.seg button{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.day{margin:1.3rem 0 .5rem;display:flex;align-items:baseline;gap:.6rem}
+.day h3{font-size:1.1rem}.day small{color:var(--ink2)}
+.today h3::after{content:" · today";color:var(--red);font-family:system-ui;font-size:.8rem}
+.item{display:flex;gap:.9rem;align-items:flex-start;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--ink);border-radius:var(--r);padding:.8rem .9rem;margin-bottom:.5rem}
+.item.off{border-left-color:var(--red);background:#fbf3f2}
+.item .t{font-weight:700;white-space:nowrap}
+.item .m{color:var(--ink2);font-size:.9rem;word-break:break-word}
+.item .a{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end}
+.item .a button{min-height:38px;padding:.3rem .7rem;font-size:.85rem}
+.tag{font-size:.75rem;padding:.1rem .45rem;border-radius:99px;border:1px solid var(--line);margin-left:.4rem}
+.tag.ok{color:var(--ok);border-color:var(--ok)}.tag.no{color:var(--red);border-color:var(--red)}
+.msg{padding:.7rem .9rem;border-radius:var(--r);margin:.8rem 0;font-size:.92rem}
+.msg.err{background:#fbe9e7;color:#8a2217}.msg.ok{background:#e3f4ea;color:#14573a}.msg.warn{background:#fff3d6;color:#6b4e00}
+.empty{text-align:center;color:var(--ink2);padding:2rem 1rem}
+.hide{display:none!important}
+@media(min-width:700px){.row.two{grid-template-columns:1fr 1fr}.row.three{grid-template-columns:1fr 1fr 1fr}.wrap{padding:0 1.5rem}}
+@media(min-width:960px){.grid{grid-template-columns:380px 1fr;align-items:start}nav{display:none}.grid>.panel.sticky{position:sticky;top:1rem}#tabAdd,#tabList{display:block!important}}
+</style></head>
+<body>
+<section id="login" class="login hide">
+  <h1>Studio bookings</h1>
+  <form id="loginForm">
+    <div class="f"><label for="u">Username</label><input id="u" autocomplete="username" required></div>
+    <div class="f"><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div>
+    <div id="loginErr" class="msg err hide"></div>
+    <button style="width:100%">Log in</button>
+  </form>
+</section>
+
+<div id="app" class="hide">
+  <header><div class="wrap"><h1 id="studio">Studio bookings</h1><button id="logout">Log out</button></div></header>
+  <div class="wrap">
+    <nav role="tablist">
+      <button role="tab" id="navList" aria-selected="true">Upcoming</button>
+      <button role="tab" id="navAdd" aria-selected="false">Add entry</button>
+    </nav>
+    <div class="grid">
+      <section id="tabAdd" class="panel sticky hide">
+        <h2 style="margin-bottom:1rem;font-size:1.2rem">Add to calendar</h2>
+        <div class="seg">
+          <button type="button" id="tBooking" aria-pressed="true">Booking</button>
+          <button type="button" id="tOff" aria-pressed="false">Out of office</button>
+        </div>
+        <form id="form" class="row">
+          <div id="clientFields" class="row">
+            <div><label for="name">Client name</label><input id="name" autocomplete="off"></div>
+            <div><label for="email">Client email</label><input id="email" type="email" inputmode="email" autocomplete="off"></div>
+          </div>
+          <div class="row two">
+            <div><label for="date" id="dateL">Date</label><input id="date" type="date" required></div>
+            <div id="endDateW" class="hide"><label for="endDate">Until (optional)</label><input id="endDate" type="date"></div>
+          </div>
+          <div class="row two">
+            <div><label for="start" id="startL">Start time</label><input id="start" type="time"></div>
+            <div><label for="end" id="endL">End time</label><input id="end" type="time"></div>
+          </div>
+          <div><label for="notes">Notes (optional)</label><textarea id="notes" rows="2" placeholder="Design, placement, deposit…"></textarea></div>
+          <div id="formMsg" class="msg hide"></div>
+          <button id="submit">Confirm booking &amp; email client</button>
+        </form>
+      </section>
+      <section id="tabList">
+        <div id="list"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let type='booking',entries=[];
+async function api(url,opt={}){
+  const r=await fetch(url,{headers:{'content-type':'application/json'},...opt,body:opt.body?JSON.stringify(opt.body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401&&url!=='/api/login'){showLogin();throw new Error(j.error)}
+  if(!r.ok)throw new Error(j.error||'Something went wrong.');
+  return j;
+}
+const show=(el,on)=>el.classList.toggle('hide',!on);
+function showLogin(){show($('login'),true);show($('app'),false)}
+async function showApp(me){$('studio').textContent=me.studio;show($('login'),false);show($('app'),true);setType('booking');await refresh()}
+async function init(){try{showApp(await api('/api/me'))}catch{showLogin()}}
+
+$('loginForm').onsubmit=async e=>{e.preventDefault();show($('loginErr'),false);
+  try{await api('/api/login',{method:'POST',body:{username:$('u').value,password:$('p').value}});$('p').value='';init()}
+  catch(err){$('loginErr').textContent=err.message;show($('loginErr'),true)}};
+$('logout').onclick=async()=>{await api('/api/logout',{method:'POST'});showLogin()};
+
+function tab(which){
+  const add=which==='add';show($('tabAdd'),add);show($('tabList'),!add);
+  $('navAdd').setAttribute('aria-selected',add);$('navList').setAttribute('aria-selected',!add);
+}
+$('navList').onclick=()=>tab('list');$('navAdd').onclick=()=>tab('add');
+tab('list');
+
+function setType(t){
+  type=t;const b=t==='booking';
+  $('tBooking').setAttribute('aria-pressed',b);$('tOff').setAttribute('aria-pressed',!b);
+  show($('clientFields'),b);show($('endDateW'),!b);
+  $('dateL').textContent=b?'Date':'From date';
+  $('startL').textContent=b?'Start time':'Start time (blank = all day)';
+  $('endL').textContent=b?'End time':'End time';
+  $('submit').textContent=b?'Confirm booking & email client':'Block out of office';
+}
+$('tBooking').onclick=()=>setType('booking');$('tOff').onclick=()=>setType('off');
+
+function msg(text,kind){const m=$('formMsg');m.textContent=text;m.className='msg '+kind;}
+
+$('form').onsubmit=async e=>{
+  e.preventDefault();$('submit').disabled=true;
+  try{
+    const body={type,date:$('date').value,endDate:$('endDate').value,start:$('start').value,end:$('end').value,
+      name:$('name').value,email:$('email').value,notes:$('notes').value};
+    const r=await api('/api/entries',{method:'POST',body});
+    if(type==='booking'){
+      msg(r.emailNote?`Booked, but the email was not sent: ${r.emailNote}`:`Booked. Confirmation sent to ${r.entry.email}.`,r.emailNote?'warn':'ok');
+    }else msg('Out of office saved.','ok');
+    $('form').reset();await refresh();
+  }catch(err){msg(err.message,'err')}
+  $('submit').disabled=false;
+};
+
+const fmtDay=d=>new Date(d+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+
+async function refresh(){entries=await api('/api/entries');render()}
+
+function render(){
+  const t=today();
+  const up=entries.filter(e=>(e.endDate||e.date)>=t);
+  if(!up.length){$('list').innerHTML='<div class="empty panel">Nothing scheduled yet. Add a booking or out-of-office block.</div>';return}
+  const days={};
+  up.forEach(e=>{const k=e.date<t?t:e.date;(days[k]=days[k]||[]).push(e)});
+  $('list').innerHTML=Object.keys(days).sort().map(d=>{
+    const items=days[d].map(e=>{
+      const times=e.start||e.end?`${e.start||''}–${e.end||''}`:'All day';
+      if(e.type==='off'){
+        const range=e.endDate&&e.endDate!==e.date?` · until ${fmtDay(e.endDate)}`:'';
+        return `<div class="item off"><div><div class="t">Out of office</div><div class="m">${times}${esc(range)}${e.notes?' · '+esc(e.notes):''}</div></div>
+          <div class="a"><button class="danger" data-del="${e.id}">Remove</button></div></div>`;
+      }
+      return `<div class="item"><div><div class="t">${times} · ${esc(e.name)}<span class="tag ${e.emailed?'ok':'no'}">${e.emailed?'emailed':'not emailed'}</span></div>
+        <div class="m">${esc(e.email)}${e.notes?' · '+esc(e.notes):''}</div></div>
+        <div class="a">${e.emailed?'':`<button class="ghost" data-re="${e.id}">Resend</button>`}<button class="danger" data-del="${e.id}">Cancel</button></div></div>`;
+    }).join('');
+    return `<div class="day ${d===t?'today':''}"><h3>${fmtDay(d)}</h3><small>${days[d].length} ${days[d].length>1?'entries':'entry'}</small></div>${items}`;
+  }).join('');
+}
+
+$('list').onclick=async e=>{
+  const del=e.target.dataset.del,re=e.target.dataset.re;
+  try{
+    if(del&&confirm('Remove this entry? The client is not notified automatically.')){await api('/api/entries/'+del,{method:'DELETE'});await refresh()}
+    if(re){e.target.disabled=true;await api(`/api/entries/${re}/resend`,{method:'POST'});await refresh()}
+  }catch(err){alert(err.message);refresh()}
+};
+init();
+</script>
+</body></html>
